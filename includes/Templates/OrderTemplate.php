@@ -97,6 +97,9 @@ class OrderTemplate
         // Order metadata.
         $html .= $this->renderOrderMetadata($order);
 
+        // Balance information (for obligo_balance gateway only).
+        $html .= $this->renderBalanceInfo($order);
+
         // Products table.
         $html .= $this->renderProductsTable($order, $accentColor);
 
@@ -246,6 +249,66 @@ class OrderTemplate
         $html .= '<td style="padding: 5px;"><strong>סטטוס:</strong> ' . esc_html(wc_get_order_status_name($order->get_status())) . '</td>';
         $html .= '<td style="padding: 5px;"><strong>אמצעי תשלום:</strong> ' . esc_html($order->get_payment_method_title()) . '</td>';
         $html .= '</tr>';
+        $html .= '</table>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Render balance information for obligo_balance payment gateway.
+     *
+     * @param \WC_Order $order Order object.
+     * @return string HTML.
+     */
+    private function renderBalanceInfo(\WC_Order $order): string
+    {
+        // Only show for obligo_balance payment gateway
+        if ($order->get_payment_method() !== 'obligo_balance') {
+            return '';
+        }
+
+        // Get balance data from order meta
+        $balanceBefore = $order->get_meta('obligo_balance_before', true);
+        $balanceAfter = $order->get_meta('obligo_balance_after', true);
+
+        // Get current balance from customer meta
+        $customerId = $order->get_customer_id();
+        $currentBalance = '';
+        if ($customerId > 0) {
+            $currentBalance = get_user_meta($customerId, 'customer_balance', true);
+        }
+
+        // Only render if we have balance data
+        if ($balanceBefore === '' && $balanceAfter === '' && $currentBalance === '') {
+            return '';
+        }
+
+        $html = '<div style="margin-bottom: 20px; padding: 15px; background-color: #e8f4f8; border-right: 4px solid #0073aa;">';
+        $html .= '<h3 style="margin: 0 0 10px 0; color: #0073aa;">מצב חשבון לקוח</h3>';
+        $html .= '<table style="width: 100%; border-collapse: collapse;">';
+
+        if ($balanceBefore !== '') {
+            $html .= '<tr>';
+            $html .= '<td style="padding: 5px; width: 50%;"><strong>יתרה לפני הזמנה:</strong></td>';
+            $html .= '<td style="padding: 5px; text-align: left;">' . $this->formatPrice((float) $balanceBefore, $order->get_currency()) . '</td>';
+            $html .= '</tr>';
+        }
+
+        if ($balanceAfter !== '') {
+            $html .= '<tr>';
+            $html .= '<td style="padding: 5px;"><strong>יתרה אחרי הזמנה:</strong></td>';
+            $html .= '<td style="padding: 5px; text-align: left;">' . $this->formatPrice((float) $balanceAfter, $order->get_currency()) . '</td>';
+            $html .= '</tr>';
+        }
+
+        if ($currentBalance !== '') {
+            $html .= '<tr style="border-top: 2px solid #0073aa;">';
+            $html .= '<td style="padding: 8px 5px;"><strong>יתרה נוכחית:</strong></td>';
+            $html .= '<td style="padding: 8px 5px; text-align: left;"><strong style="font-size: 12pt;">' . $this->formatPrice((float) $currentBalance, $order->get_currency()) . '</strong></td>';
+            $html .= '</tr>';
+        }
+
         $html .= '</table>';
         $html .= '</div>';
 

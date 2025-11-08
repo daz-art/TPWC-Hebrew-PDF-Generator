@@ -254,6 +254,22 @@ class TransactionTemplate
             $html .= '</tr>';
         }
 
+        // Balance before transaction.
+        if (isset($data['balance_before'])) {
+            $html .= '<tr>';
+            $html .= '<td style="padding: 8px; background-color: #f8f9fa; border: 1px solid #ddd;"><strong>יתרה לפני עסקה:</strong></td>';
+            $html .= '<td style="padding: 8px; border: 1px solid #ddd;">' . $this->formatPrice((float) $data['balance_before'], $data['currency'] ?? 'ILS') . '</td>';
+            $html .= '</tr>';
+        }
+
+        // Balance after transaction.
+        if (isset($data['balance_after'])) {
+            $html .= '<tr>';
+            $html .= '<td style="padding: 8px; background-color: #f8f9fa; border: 1px solid #ddd;"><strong>יתרה אחרי עסקה:</strong></td>';
+            $html .= '<td style="padding: 8px; border: 1px solid #ddd;">' . $this->formatPrice((float) $data['balance_after'], $data['currency'] ?? 'ILS') . '</td>';
+            $html .= '</tr>';
+        }
+
         // Payment method.
         if (!empty($data['method'])) {
             $html .= '<tr>';
