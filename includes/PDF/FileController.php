@@ -136,7 +136,9 @@ class FileController
 
         $recordId = (int) $_GET['tpwc_pdf'];
         $expires = (int) $_GET['expires'];
-        $action = sanitize_text_field($_GET['action']);
+        $action = in_array($_GET['action'], ['preview', 'download'], true)
+            ? $_GET['action']
+            : 'download';
         $signature = sanitize_text_field($_GET['signature']);
 
         // Verify signature.
@@ -266,7 +268,9 @@ class FileController
 
         // Delete file if it exists.
         if (file_exists($record->file_path)) {
-            unlink($record->file_path);
+            if (!@unlink($record->file_path)) {
+                $this->logger->warning("Failed to delete file: {$record->file_path}");
+            }
         }
 
         // Delete database record.

@@ -129,7 +129,7 @@ class ListTable extends \WP_List_Table
         echo '<div class="alignleft actions">';
 
         // Type filter.
-        $currentType = isset($_GET['filter_type']) ? sanitize_text_field($_GET['filter_type']) : '';
+        $currentType = isset($_GET['filter_type']) ? esc_attr(sanitize_text_field($_GET['filter_type'])) : '';
         echo '<select name="filter_type">';
         echo '<option value="">' . esc_html__('All Types', 'tpwc-hebrew-pdf') . '</option>';
         echo '<option value="order"' . selected($currentType, 'order', false) . '>' . esc_html__('Order', 'tpwc-hebrew-pdf') . '</option>';
@@ -137,7 +137,7 @@ class ListTable extends \WP_List_Table
         echo '</select>';
 
         // Status filter.
-        $currentStatus = isset($_GET['filter_status']) ? sanitize_text_field($_GET['filter_status']) : '';
+        $currentStatus = isset($_GET['filter_status']) ? esc_attr(sanitize_text_field($_GET['filter_status'])) : '';
         echo '<select name="filter_status">';
         echo '<option value="">' . esc_html__('All Statuses', 'tpwc-hebrew-pdf') . '</option>';
         echo '<option value="cached"' . selected($currentStatus, 'cached', false) . '>' . esc_html__('Cached', 'tpwc-hebrew-pdf') . '</option>';
@@ -145,8 +145,8 @@ class ListTable extends \WP_List_Table
         echo '</select>';
 
         // Date filters.
-        $dateFrom = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from']) : '';
-        $dateTo = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
+        $dateFrom = isset($_GET['date_from']) ? esc_attr(sanitize_text_field($_GET['date_from'])) : '';
+        $dateTo = isset($_GET['date_to']) ? esc_attr(sanitize_text_field($_GET['date_to'])) : '';
 
         echo '<input type="date" name="date_from" value="' . esc_attr($dateFrom) . '" placeholder="' . esc_attr__('From', 'tpwc-hebrew-pdf') . '" />';
         echo '<input type="date" name="date_to" value="' . esc_attr($dateTo) . '" placeholder="' . esc_attr__('To', 'tpwc-hebrew-pdf') . '" />';

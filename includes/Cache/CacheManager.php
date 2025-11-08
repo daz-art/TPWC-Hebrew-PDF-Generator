@@ -271,7 +271,7 @@ class CacheManager
             'amount' => $metadata['amount'] ?? null,
             'file_path' => $filePath,
             'file_hash' => $hash,
-            'bytes' => filesize($filePath),
+            'bytes' => filesize($filePath) ?: 0,
             'status' => 'cached',
             'meta' => $metadata,
         ];
@@ -348,7 +348,9 @@ class CacheManager
         foreach ($oldRecords as $record) {
             // Delete file.
             if (file_exists($record->file_path)) {
-                unlink($record->file_path);
+                if (!@unlink($record->file_path)) {
+                    $this->logger->warning("Failed to delete file: {$record->file_path}");
+                }
             }
 
             // Delete database record.

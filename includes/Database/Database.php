@@ -335,6 +335,11 @@ class Database
         $offset = ($args['page'] - 1) * $args['per_page'];
         $orderby = sanitize_sql_orderby($args['orderby'] . ' ' . $args['order']);
 
+        // Fallback to safe default if sanitization fails
+        if ($orderby === false) {
+            $orderby = 'created_at DESC';
+        }
+
         $query = "SELECT * FROM {$this->getTableName()} WHERE {$whereClause} ORDER BY {$orderby} LIMIT %d OFFSET %d";
         $queryPlaceholders = array_merge($wherePlaceholders, [$args['per_page'], $offset]);
 
@@ -389,27 +394,26 @@ class Database
 
         $tableName = $this->getTableName();
 
-        $stats = [
-            'total_files' => 0,
-            'total_bytes' => 0,
-            'cached_files' => 0,
-            'stale_files' => 0,
-            'order_pdfs' => 0,
-            'transaction_pdfs' => 0,
+        // Use single optimized query with conditional counts
+        $result = $wpdb->get_row("
+            SELECT
+                COUNT(*) as total,
+                COALESCE(SUM(bytes), 0) as total_bytes,
+                SUM(CASE WHEN status = 'cached' THEN 1 ELSE 0 END) as cached_files,
+                SUM(CASE WHEN status = 'stale' THEN 1 ELSE 0 END) as stale_files,
+                SUM(CASE WHEN type = 'order' THEN 1 ELSE 0 END) as order_pdfs,
+                SUM(CASE WHEN type = 'transaction' THEN 1 ELSE 0 END) as transaction_pdfs
+            FROM {$tableName}
+        ");
+
+        return [
+            'total_files' => (int) ($result->total ?? 0),
+            'total_bytes' => (int) ($result->total_bytes ?? 0),
+            'cached_files' => (int) ($result->cached_files ?? 0),
+            'stale_files' => (int) ($result->stale_files ?? 0),
+            'order_pdfs' => (int) ($result->order_pdfs ?? 0),
+            'transaction_pdfs' => (int) ($result->transaction_pdfs ?? 0),
         ];
-
-        $result = $wpdb->get_row("SELECT COUNT(*) as total, SUM(bytes) as total_bytes FROM {$tableName}");
-        if ($result) {
-            $stats['total_files'] = (int) $result->total;
-            $stats['total_bytes'] = (int) $result->total_bytes;
-        }
-
-        $stats['cached_files'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$tableName} WHERE status = 'cached'");
-        $stats['stale_files'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$tableName} WHERE status = 'stale'");
-        $stats['order_pdfs'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$tableName} WHERE type = 'order'");
-        $stats['transaction_pdfs'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$tableName} WHERE type = 'transaction'");
-
-        return $stats;
     }
 
     /**

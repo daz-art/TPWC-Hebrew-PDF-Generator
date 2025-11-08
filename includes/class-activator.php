@@ -52,7 +52,12 @@ class Activator
         $storageDir = $uploadDir['basedir'] . '/tpwc-pdfs';
 
         if (!file_exists($storageDir)) {
-            wp_mkdir_p($storageDir);
+            if (!wp_mkdir_p($storageDir)) {
+                wp_die(
+                    esc_html__('Failed to create storage directory. Please check file permissions.', 'tpwc-hebrew-pdf'),
+                    esc_html__('Activation Error', 'tpwc-hebrew-pdf')
+                );
+            }
         }
 
         // Create .htaccess to deny direct access.
