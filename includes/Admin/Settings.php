@@ -176,6 +176,11 @@ class Settings
         $type = $args['type'];
         $value = get_option($name);
 
+        // Ensure value is a string for text-based fields
+        if (in_array($type, ['text', 'email', 'url', 'number', 'textarea'], true)) {
+            $value = is_string($value) ? $value : '';
+        }
+
         switch ($type) {
             case 'text':
             case 'email':

@@ -178,54 +178,64 @@ class Generator
      */
     private function renderPdf(string $html, string $filePath): void
     {
-        // Verify Rubik fonts are available.
-        $this->verifyFonts();
+        try {
+            // Verify Rubik fonts are available.
+            $this->verifyFonts();
 
-        // Get template settings.
-        $margins = $this->settings->get('template_margins', [
-            'top' => 15,
-            'right' => 15,
-            'bottom' => 15,
-            'left' => 15,
-        ]);
+            // Get template settings.
+            $margins = $this->settings->get('template_margins', [
+                'top' => 15,
+                'right' => 15,
+                'bottom' => 15,
+                'left' => 15,
+            ]);
 
-        // Configure mPDF.
-        $config = [
-            'mode' => 'utf-8',
-            'format' => 'A4',
-            'orientation' => 'P',
-            'margin_left' => $margins['left'],
-            'margin_right' => $margins['right'],
-            'margin_top' => $margins['top'],
-            'margin_bottom' => $margins['bottom'],
-            'margin_header' => 5,
-            'margin_footer' => 5,
-            'default_font_size' => 10,
-            'default_font' => 'rubik',
-            'tempDir' => sys_get_temp_dir(),
-            'fontDir' => [TPWC_HEBREW_PDF_PATH . 'includes/Fonts'],
-            'fontdata' => $this->getFontData(),
-            'autoScriptToLang' => true,
-            'autoLangToFont' => true,
-            'autoVietnamese' => false,
-            'autoArabic' => false,
-        ];
+            // Configure mPDF.
+            $config = [
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'orientation' => 'P',
+                'margin_left' => $margins['left'],
+                'margin_right' => $margins['right'],
+                'margin_top' => $margins['top'],
+                'margin_bottom' => $margins['bottom'],
+                'margin_header' => 5,
+                'margin_footer' => 5,
+                'default_font_size' => 10,
+                'default_font' => 'rubik',
+                'tempDir' => sys_get_temp_dir(),
+                'fontDir' => [TPWC_HEBREW_PDF_PATH . 'includes/Fonts'],
+                'fontdata' => $this->getFontData(),
+                'autoScriptToLang' => true,
+                'autoLangToFont' => true,
+                'autoVietnamese' => false,
+                'autoArabic' => false,
+            ];
 
-        $mpdf = new Mpdf($config);
+            $mpdf = new Mpdf($config);
 
-        // Set RTL direction.
-        $mpdf->SetDirectionality('rtl');
+            // Set RTL direction.
+            $mpdf->SetDirectionality('rtl');
 
-        // Set default styles.
-        $mpdf->WriteHTML($this->getDefaultStyles(), 1);
+            // Set default styles.
+            $mpdf->WriteHTML($this->getDefaultStyles(), 1);
 
-        // Write HTML content.
-        $mpdf->WriteHTML($html, 2);
+            // Write HTML content.
+            $mpdf->WriteHTML($html, 2);
 
-        // Output to file.
-        $mpdf->Output($filePath, 'F');
+            // Output to file.
+            $mpdf->Output($filePath, 'F');
 
-        $this->logger->debug("Rendered PDF: {$filePath}");
+            $this->logger->debug("Rendered PDF: {$filePath}");
+        } catch (\Mpdf\MpdfException $e) {
+            // mPDF-specific errors (font loading, rendering, memory issues)
+            $this->logger->error("mPDF rendering error: " . $e->getMessage());
+            throw new \Exception("PDF rendering failed: " . $e->getMessage(), 0, $e);
+        } catch (\Exception $e) {
+            // File write errors or other issues
+            $this->logger->error("Failed to create PDF file: " . $e->getMessage());
+            throw new \Exception("PDF creation failed: " . $e->getMessage(), 0, $e);
+        }
     }
 
     /**

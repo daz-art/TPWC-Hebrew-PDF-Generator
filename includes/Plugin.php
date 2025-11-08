@@ -149,8 +149,17 @@ final class Plugin
 
         // Cron cleanup.
         add_action('tpwc_cleanup_old_pdfs', [$this->cache, 'cleanupOldFiles']);
+
+        // Schedule cleanup with transient lock to prevent race conditions
         if (!wp_next_scheduled('tpwc_cleanup_old_pdfs')) {
-            wp_schedule_event(time(), 'daily', 'tpwc_cleanup_old_pdfs');
+            // Use transient lock to prevent concurrent scheduling
+            if (false === get_transient('tpwc_scheduling_cleanup')) {
+                set_transient('tpwc_scheduling_cleanup', 1, 60); // 60 second lock
+                if (!wp_next_scheduled('tpwc_cleanup_old_pdfs')) {
+                    wp_schedule_event(time(), 'daily', 'tpwc_cleanup_old_pdfs');
+                }
+                delete_transient('tpwc_scheduling_cleanup');
+            }
         }
 
         // Load text domain.

@@ -344,7 +344,8 @@ class OrderTemplate
                 return esc_html((string) $item->get_quantity());
 
             case 'unit_price':
-                $unitPrice = $item->get_subtotal() / max(1, $item->get_quantity());
+                $qty = $item->get_quantity();
+                $unitPrice = $qty > 0 ? $item->get_subtotal() / $qty : 0;
                 return $this->formatPrice($unitPrice, $order->get_currency());
 
             case 'line_total':
