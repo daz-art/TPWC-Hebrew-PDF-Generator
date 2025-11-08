@@ -113,7 +113,13 @@ class Database
 
         // Encode meta as JSON if it's an array.
         if (is_array($data['meta'])) {
-            $data['meta'] = wp_json_encode($data['meta']);
+            $encoded = wp_json_encode($data['meta']);
+            if ($encoded === false) {
+                $this->logger->error('Failed to JSON encode meta data');
+                $data['meta'] = null;
+            } else {
+                $data['meta'] = $encoded;
+            }
         }
 
         $result = $wpdb->insert(
@@ -154,7 +160,13 @@ class Database
 
         // Encode meta as JSON if it's an array.
         if (isset($data['meta']) && is_array($data['meta'])) {
-            $data['meta'] = wp_json_encode($data['meta']);
+            $encoded = wp_json_encode($data['meta']);
+            if ($encoded === false) {
+                $this->logger->error('Failed to JSON encode meta data');
+                $data['meta'] = null;
+            } else {
+                $data['meta'] = $encoded;
+            }
         }
 
         $result = $wpdb->update(
@@ -191,7 +203,13 @@ class Database
         );
 
         if ($record && $record->meta) {
-            $record->meta = json_decode($record->meta, true);
+            $decoded = json_decode($record->meta, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->logger->warning("Invalid JSON in record meta (ID {$id}): " . json_last_error_msg());
+                $record->meta = [];
+            } else {
+                $record->meta = $decoded;
+            }
         }
 
         return $record ?: null;
@@ -215,7 +233,13 @@ class Database
         );
 
         if ($record && $record->meta) {
-            $record->meta = json_decode($record->meta, true);
+            $decoded = json_decode($record->meta, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->logger->warning("Invalid JSON in record meta (hash {$hash}): " . json_last_error_msg());
+                $record->meta = [];
+            } else {
+                $record->meta = $decoded;
+            }
         }
 
         return $record ?: null;
@@ -242,7 +266,13 @@ class Database
 
         foreach ($records as $record) {
             if ($record->meta) {
-                $record->meta = json_decode($record->meta, true);
+                $decoded = json_decode($record->meta, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $this->logger->warning("Invalid JSON in record meta (type {$type}, ref_id {$refId}): " . json_last_error_msg());
+                    $record->meta = [];
+                } else {
+                    $record->meta = $decoded;
+                }
             }
         }
 
@@ -347,7 +377,13 @@ class Database
 
         foreach ($items as $item) {
             if ($item->meta) {
-                $item->meta = json_decode($item->meta, true);
+                $decoded = json_decode($item->meta, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $this->logger->warning("Invalid JSON in record meta (paginated results): " . json_last_error_msg());
+                    $item->meta = [];
+                } else {
+                    $item->meta = $decoded;
+                }
             }
         }
 

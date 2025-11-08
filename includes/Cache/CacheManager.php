@@ -133,7 +133,12 @@ class CacheManager
         $payload = $this->sortKeysRecursive($payload);
 
         // Compute hash.
-        return hash('sha256', wp_json_encode($payload, JSON_UNESCAPED_UNICODE));
+        $encoded = wp_json_encode($payload, JSON_UNESCAPED_UNICODE);
+        if ($encoded === false) {
+            throw new \Exception('Failed to JSON encode order payload for hash computation');
+        }
+
+        return hash('sha256', $encoded);
     }
 
     /**
@@ -163,7 +168,12 @@ class CacheManager
         $payload = $this->sortKeysRecursive($payload);
 
         // Compute hash.
-        return hash('sha256', wp_json_encode($payload, JSON_UNESCAPED_UNICODE));
+        $encoded = wp_json_encode($payload, JSON_UNESCAPED_UNICODE);
+        if ($encoded === false) {
+            throw new \Exception('Failed to JSON encode transaction payload for hash computation');
+        }
+
+        return hash('sha256', $encoded);
     }
 
     /**
