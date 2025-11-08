@@ -89,6 +89,20 @@ final class Plugin
     public Attachments $emailAttachments;
 
     /**
+     * Admin menu handler.
+     *
+     * @var AdminMenu|null
+     */
+    private ?AdminMenu $adminMenu = null;
+
+    /**
+     * REST API handler.
+     *
+     * @var API|null
+     */
+    private ?API $api = null;
+
+    /**
      * Private constructor to enforce singleton.
      */
     private function __construct()
@@ -128,12 +142,12 @@ final class Plugin
     {
         // Admin interface.
         if (is_admin()) {
-            new AdminMenu($this->database, $this->generator, $this->settings, $this->logger);
+            $this->adminMenu = new AdminMenu($this->database, $this->generator, $this->settings, $this->logger);
         }
 
         // REST API.
         add_action('rest_api_init', function () {
-            new API($this->generator, $this->database, $this->fileController, $this->logger);
+            $this->api = new API($this->generator, $this->database, $this->fileController, $this->logger);
         });
 
         // WP-CLI.
@@ -180,13 +194,13 @@ final class Plugin
     /**
      * Handle order status changed.
      *
-     * @param int    $orderId     Order ID.
-     * @param string $oldStatus   Old status.
-     * @param string $newStatus   New status.
-     * @param object $order       Order object.
+     * @param int       $orderId     Order ID.
+     * @param string    $oldStatus   Old status.
+     * @param string    $newStatus   New status.
+     * @param \WC_Order $order       Order object.
      * @return void
      */
-    public function onOrderStatusChanged(int $orderId, string $oldStatus, string $newStatus, object $order): void
+    public function onOrderStatusChanged(int $orderId, string $oldStatus, string $newStatus, \WC_Order $order): void
     {
         $autoGenerateStatuses = $this->settings->get('auto_generate_statuses', []);
 

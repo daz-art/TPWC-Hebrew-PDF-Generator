@@ -28,11 +28,21 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants.
-define('TPWC_HEBREW_PDF_VERSION', '1.0.0');
-define('TPWC_HEBREW_PDF_FILE', __FILE__);
-define('TPWC_HEBREW_PDF_PATH', plugin_dir_path(__FILE__));
-define('TPWC_HEBREW_PDF_URL', plugin_dir_url(__FILE__));
-define('TPWC_HEBREW_PDF_BASENAME', plugin_basename(__FILE__));
+if (!defined('TPWC_HEBREW_PDF_VERSION')) {
+    define('TPWC_HEBREW_PDF_VERSION', '1.0.0');
+}
+if (!defined('TPWC_HEBREW_PDF_FILE')) {
+    define('TPWC_HEBREW_PDF_FILE', __FILE__);
+}
+if (!defined('TPWC_HEBREW_PDF_PATH')) {
+    define('TPWC_HEBREW_PDF_PATH', plugin_dir_path(__FILE__));
+}
+if (!defined('TPWC_HEBREW_PDF_URL')) {
+    define('TPWC_HEBREW_PDF_URL', plugin_dir_url(__FILE__));
+}
+if (!defined('TPWC_HEBREW_PDF_BASENAME')) {
+    define('TPWC_HEBREW_PDF_BASENAME', plugin_basename(__FILE__));
+}
 
 // Check PHP version.
 if (version_compare(PHP_VERSION, '8.1', '<')) {

@@ -55,9 +55,12 @@ class Commands extends WP_CLI_Command
 
         WP_CLI::log('Starting PDF regeneration...');
 
+        // Process in batches to avoid memory issues on large sites.
+        $batchSize = 1000;
+
         // Build query args.
         $queryArgs = [
-            'per_page' => $limit > 0 ? $limit : 999999,
+            'per_page' => $limit > 0 ? min($limit, $batchSize) : $batchSize,
             'page' => 1,
             'orderby' => 'created_at',
             'order' => 'DESC',
@@ -144,7 +147,7 @@ class Commands extends WP_CLI_Command
         // Get old records.
         global $wpdb;
         $tableName = $plugin->database->getTableName();
-        $cutoffDate = date('Y-m-d H:i:s', strtotime("-{$daysOld} days"));
+        $cutoffDate = gmdate('Y-m-d H:i:s', strtotime("-{$daysOld} days"));
 
         $oldRecords = $wpdb->get_results(
             $wpdb->prepare(
@@ -159,7 +162,9 @@ class Commands extends WP_CLI_Command
         }
 
         $count = count($oldRecords);
-        $totalBytes = array_sum(array_column($oldRecords, 'bytes'));
+        $totalBytes = array_sum(array_map(function ($record) {
+            return (int) ($record->bytes ?? 0);
+        }, $oldRecords));
 
         WP_CLI::log("Found {$count} PDFs to delete (" . size_format($totalBytes) . ")");
 

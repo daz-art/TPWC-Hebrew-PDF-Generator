@@ -86,7 +86,7 @@ class Attachments
 
             $record = $plugin->database->get($recordId);
 
-            if ($record && file_exists($record->file_path)) {
+            if ($record && isset($record->file_path) && file_exists($record->file_path)) {
                 $attachments[] = $record->file_path;
                 $this->logger->info("Attached PDF to email {$emailId} for order {$orderId}");
             }
