@@ -87,10 +87,12 @@ class CacheManager
         $canonicalItems = [];
 
         foreach ($items as $itemId => $item) {
+            $product = $item->get_product();
+
             $canonicalItems[] = [
                 'line_id' => $itemId,
                 'name' => $this->canonicalize($item->get_name()),
-                'sku' => $this->canonicalize($item->get_product() ? $item->get_product()->get_sku() : ''),
+                'sku' => $this->canonicalize($product ? $product->get_sku() : ''),
                 'qty' => (int) $item->get_quantity(),
                 'unit_price' => $this->canonicalizePrice($item->get_subtotal() / max(1, $item->get_quantity())),
                 'line_total' => $this->canonicalizePrice($item->get_total()),
@@ -334,7 +336,7 @@ class CacheManager
         // Get old records.
         global $wpdb;
         $tableName = $this->database->getTableName();
-        $cutoffDate = date('Y-m-d H:i:s', strtotime("-{$ttl} days"));
+        $cutoffDate = gmdate('Y-m-d H:i:s', strtotime("-{$ttl} days"));
 
         $oldRecords = $wpdb->get_results(
             $wpdb->prepare(

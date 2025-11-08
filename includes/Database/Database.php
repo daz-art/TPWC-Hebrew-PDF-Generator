@@ -426,7 +426,7 @@ class Database
     {
         global $wpdb;
 
-        $cutoffDate = date('Y-m-d H:i:s', strtotime("-{$daysOld} days"));
+        $cutoffDate = gmdate('Y-m-d H:i:s', strtotime("-{$daysOld} days"));
 
         $result = $wpdb->query(
             $wpdb->prepare(

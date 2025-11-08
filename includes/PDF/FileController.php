@@ -54,6 +54,16 @@ class FileController
     }
 
     /**
+     * Get database instance.
+     *
+     * @return Database Database instance.
+     */
+    public function getDatabase(): Database
+    {
+        return $this->database;
+    }
+
+    /**
      * Generate a signed download URL.
      *
      * @param int  $recordId Record ID.
@@ -197,8 +207,10 @@ class FileController
         // For orders, check if the user owns the order.
         if ($record->type === 'order') {
             $order = wc_get_order($record->ref_id);
+            $customerId = get_current_user_id();
 
-            if ($order && $order->get_customer_id() === get_current_user_id()) {
+            // Ensure user is logged in (ID > 0) and matches order customer
+            if ($customerId > 0 && $order && $order->get_customer_id() === $customerId) {
                 return true;
             }
         }
@@ -237,7 +249,7 @@ class FileController
             '%s-%d-%s.pdf',
             $record->type,
             $record->ref_id,
-            date('Y-m-d', strtotime($record->created_at))
+            gmdate('Y-m-d', strtotime($record->created_at))
         );
 
         if ($preview) {

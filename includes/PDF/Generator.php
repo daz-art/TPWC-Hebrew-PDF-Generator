@@ -327,8 +327,8 @@ CSS;
      */
     public function regeneratePdf(int $recordId)
     {
-        // Access database through FileController which has public access
-        $record = $this->fileController->database->get($recordId);
+        // Get database instance through FileController
+        $record = $this->fileController->getDatabase()->get($recordId);
 
         if (!$record) {
             $this->logger->error("Cannot regenerate: record {$recordId} not found");
@@ -340,9 +340,15 @@ CSS;
         }
 
         if ($record->type === 'transaction') {
-            // For transactions, we need the original data.
-            // We'll retrieve it from the meta field if available.
+            // For transactions, we need the original data from meta field.
             $data = $record->meta ?? [];
+
+            // Validate required fields exist in meta data
+            if (empty($data['type']) || !isset($data['amount'])) {
+                $this->logger->error("Cannot regenerate transaction {$recordId}: missing required data in meta (type or amount)");
+                return false;
+            }
+
             return $this->generateTransactionPdf($record->ref_id, $data, true);
         }
 
