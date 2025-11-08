@@ -64,6 +64,10 @@ class Attachments
         // Get enabled email types from settings.
         $enabledEmails = get_option('tpwc_email_attachments', []);
 
+        if (!is_array($enabledEmails)) {
+            $enabledEmails = [];
+        }
+
         if (empty($enabledEmails) || !in_array($emailId, $enabledEmails, true)) {
             return $attachments;
         }

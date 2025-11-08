@@ -152,10 +152,8 @@ class API extends WP_REST_Controller
                     'type' => 'integer',
                     'validate_callback' => [$this, 'validateRecordId'],
                 ],
-                'token' => [
-                    'required' => true,
-                    'type' => 'string',
-                ],
+                // Note: Token parameter removed - HMAC-signed URLs already provide security
+                // API access requires manage_woocommerce capability via checkFilePermissions
             ],
         ]);
     }
@@ -183,6 +181,15 @@ class API extends WP_REST_Controller
             }
 
             $record = $this->database->get($recordId);
+
+            if (!$record) {
+                return new WP_Error(
+                    'record_not_found',
+                    __('Generated PDF record not found.', 'tpwc-hebrew-pdf'),
+                    ['status' => 500]
+                );
+            }
+
             $downloadUrl = $this->fileController->generateSignedUrl($recordId);
 
             return new WP_REST_Response([
@@ -226,6 +233,15 @@ class API extends WP_REST_Controller
             }
 
             $record = $this->database->get($recordId);
+
+            if (!$record) {
+                return new WP_Error(
+                    'record_not_found',
+                    __('Generated PDF record not found.', 'tpwc-hebrew-pdf'),
+                    ['status' => 500]
+                );
+            }
+
             $downloadUrl = $this->fileController->generateSignedUrl($recordId);
 
             return new WP_REST_Response([

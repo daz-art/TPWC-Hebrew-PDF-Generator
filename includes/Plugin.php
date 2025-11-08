@@ -190,6 +190,10 @@ final class Plugin
     {
         $autoGenerateStatuses = $this->settings->get('auto_generate_statuses', []);
 
+        if (!is_array($autoGenerateStatuses)) {
+            $autoGenerateStatuses = [];
+        }
+
         if (in_array($newStatus, $autoGenerateStatuses, true)) {
             try {
                 $this->generator->generateOrderPdf($orderId);

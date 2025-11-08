@@ -202,13 +202,22 @@ class Scheduler
             return null;
         }
 
-        $action = \ActionScheduler::store()->fetch_action($actionId);
+        try {
+            if (!class_exists('\ActionScheduler') || !method_exists('\ActionScheduler', 'store')) {
+                return null;
+            }
 
-        if (!$action) {
+            $action = \ActionScheduler::store()->fetch_action($actionId);
+
+            if (!$action) {
+                return null;
+            }
+
+            return $action->get_status();
+        } catch (\Exception $e) {
+            $this->logger->warning("Failed to fetch action status: " . $e->getMessage());
             return null;
         }
-
-        return $action->get_status();
     }
 
     /**
@@ -219,8 +228,16 @@ class Scheduler
      */
     public function cancelAction(int $actionId): void
     {
-        if (function_exists('as_unschedule_action')) {
-            \ActionScheduler::store()->cancel_action($actionId);
+        if (!function_exists('as_unschedule_action')) {
+            return;
+        }
+
+        try {
+            if (class_exists('\ActionScheduler') && method_exists('\ActionScheduler', 'store')) {
+                \ActionScheduler::store()->cancel_action($actionId);
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning("Failed to cancel action: " . $e->getMessage());
         }
     }
 }

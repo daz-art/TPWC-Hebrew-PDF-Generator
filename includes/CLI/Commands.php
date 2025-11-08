@@ -267,6 +267,12 @@ class Commands extends WP_CLI_Command
             }
 
             $record = $plugin->database->get($recordId);
+
+            if (!$record) {
+                WP_CLI::error('Failed to retrieve PDF record.');
+                return;
+            }
+
             $downloadUrl = $plugin->fileController->generateSignedUrl($recordId, 3600);
 
             WP_CLI::success("PDF generated successfully.");

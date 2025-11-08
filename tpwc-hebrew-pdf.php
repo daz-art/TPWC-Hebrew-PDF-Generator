@@ -97,7 +97,17 @@ add_action('plugins_loaded', function () {
     }
 
     // Check WooCommerce version.
-    if (version_compare(WC()->version, '9.0', '<')) {
+    $wc = WC();
+    if (!$wc || !isset($wc->version)) {
+        add_action('admin_notices', function () {
+            echo '<div class="error"><p>';
+            echo esc_html__('TPWC Hebrew PDF Generator: WooCommerce not properly initialized.', 'tpwc-hebrew-pdf');
+            echo '</p></div>';
+        });
+        return;
+    }
+
+    if (version_compare($wc->version, '9.0', '<')) {
         add_action('admin_notices', function () {
             echo '<div class="error"><p>';
             echo esc_html__('TPWC Hebrew PDF Generator requires WooCommerce 9.0 or higher.', 'tpwc-hebrew-pdf');
