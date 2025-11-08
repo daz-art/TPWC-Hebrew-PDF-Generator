@@ -29,9 +29,9 @@ class Logger
     /**
      * Get logger instance.
      *
-     * @return \WC_Logger
+     * @return \WC_Logger|null
      */
-    private function getLogger(): \WC_Logger
+    private function getLogger(): ?\WC_Logger
     {
         if ($this->logger === null && function_exists('wc_get_logger')) {
             $this->logger = wc_get_logger();

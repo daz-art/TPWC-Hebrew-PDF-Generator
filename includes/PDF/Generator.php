@@ -317,7 +317,8 @@ CSS;
      */
     public function regeneratePdf(int $recordId)
     {
-        $record = $this->cache->database->get($recordId);
+        // Access database through FileController which has public access
+        $record = $this->fileController->database->get($recordId);
 
         if (!$record) {
             $this->logger->error("Cannot regenerate: record {$recordId} not found");
