@@ -115,32 +115,39 @@ class AdminMenu
      */
     public function enqueueAssets(string $hook): void
     {
-        if (strpos($hook, 'tpwc-pdf') === false) {
-            return;
+        // Only enqueue on our plugin pages (clearer logic).
+        if (strpos($hook, 'tpwc-pdf') !== false) {
+            // Check if CSS file exists before enqueueing.
+            $cssPath = TPWC_HEBREW_PDF_PATH . 'assets/css/admin.css';
+            if (file_exists($cssPath)) {
+                wp_enqueue_style(
+                    'tpwc-admin',
+                    TPWC_HEBREW_PDF_URL . 'assets/css/admin.css',
+                    [],
+                    TPWC_HEBREW_PDF_VERSION
+                );
+            }
+
+            // Check if JS file exists before enqueueing.
+            $jsPath = TPWC_HEBREW_PDF_PATH . 'assets/js/admin.js';
+            if (file_exists($jsPath)) {
+                wp_enqueue_script(
+                    'tpwc-admin',
+                    TPWC_HEBREW_PDF_URL . 'assets/js/admin.js',
+                    ['jquery', 'wp-util'],
+                    TPWC_HEBREW_PDF_VERSION,
+                    true
+                );
+
+                wp_localize_script('tpwc-admin', 'tpwcAdmin', [
+                    'ajaxUrl' => admin_url('admin-ajax.php'),
+                    'nonce' => wp_create_nonce('tpwc_admin'),
+                ]);
+            }
+
+            // Enqueue media uploader.
+            wp_enqueue_media();
         }
-
-        wp_enqueue_style(
-            'tpwc-admin',
-            TPWC_HEBREW_PDF_URL . 'assets/css/admin.css',
-            [],
-            TPWC_HEBREW_PDF_VERSION
-        );
-
-        wp_enqueue_script(
-            'tpwc-admin',
-            TPWC_HEBREW_PDF_URL . 'assets/js/admin.js',
-            ['jquery', 'wp-util'],
-            TPWC_HEBREW_PDF_VERSION,
-            true
-        );
-
-        wp_localize_script('tpwc-admin', 'tpwcAdmin', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('tpwc_admin'),
-        ]);
-
-        // Enqueue media uploader.
-        wp_enqueue_media();
     }
 
     /**

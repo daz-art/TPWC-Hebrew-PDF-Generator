@@ -80,6 +80,62 @@ class API extends WP_REST_Controller
     }
 
     /**
+     * Check rate limit for API requests.
+     *
+     * @param string $endpoint Endpoint identifier.
+     * @return WP_Error|true True if within limit, WP_Error if exceeded.
+     */
+    private function checkRateLimit(string $endpoint)
+    {
+        // Get current user ID or IP for anonymous requests.
+        $userId = get_current_user_id();
+        $identifier = $userId > 0 ? 'user_' . $userId : 'ip_' . $this->getClientIp();
+
+        // Rate limit: 60 requests per minute per user/IP.
+        $transientKey = 'tpwc_rate_limit_' . md5($endpoint . '_' . $identifier);
+        $requests = get_transient($transientKey);
+
+        if ($requests === false) {
+            // First request in this minute window.
+            set_transient($transientKey, 1, 60);
+            return true;
+        }
+
+        if ($requests >= 60) {
+            $this->logger->warning("Rate limit exceeded for {$endpoint} by {$identifier}");
+            return new WP_Error(
+                'rate_limit_exceeded',
+                __('Rate limit exceeded. Please try again later.', 'tpwc-hebrew-pdf'),
+                ['status' => 429]
+            );
+        }
+
+        // Increment request count.
+        set_transient($transientKey, $requests + 1, 60);
+        return true;
+    }
+
+    /**
+     * Get client IP address.
+     *
+     * @return string Client IP.
+     */
+    private function getClientIp(): string
+    {
+        $ipAddress = '';
+
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ipAddress = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ipAddress = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']));
+        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+            $ipAddress = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
+        }
+
+        return $ipAddress;
+    }
+
+    /**
      * Register REST routes.
      *
      * @return void
@@ -118,6 +174,7 @@ class API extends WP_REST_Controller
                 'data' => [
                     'required' => true,
                     'type' => 'object',
+                    'validate_callback' => [$this, 'validateTransactionData'],
                 ],
                 'force' => [
                     'required' => false,
@@ -166,6 +223,12 @@ class API extends WP_REST_Controller
      */
     public function generateOrderPdf(WP_REST_Request $request)
     {
+        // Check rate limit.
+        $rateLimitCheck = $this->checkRateLimit('generate_order');
+        if (is_wp_error($rateLimitCheck)) {
+            return $rateLimitCheck;
+        }
+
         $orderId = (int) $request['order_id'];
         $force = (bool) $request->get_param('force');
 
@@ -217,6 +280,12 @@ class API extends WP_REST_Controller
      */
     public function generateTransactionPdf(WP_REST_Request $request)
     {
+        // Check rate limit.
+        $rateLimitCheck = $this->checkRateLimit('generate_transaction');
+        if (is_wp_error($rateLimitCheck)) {
+            return $rateLimitCheck;
+        }
+
         $transactionId = (int) $request['transaction_id'];
         $data = $request->get_param('data');
         $force = (bool) $request->get_param('force');
@@ -269,6 +338,12 @@ class API extends WP_REST_Controller
      */
     public function regeneratePdf(WP_REST_Request $request)
     {
+        // Check rate limit.
+        $rateLimitCheck = $this->checkRateLimit('regenerate');
+        if (is_wp_error($rateLimitCheck)) {
+            return $rateLimitCheck;
+        }
+
         $recordId = (int) $request['record_id'];
 
         try {
@@ -308,6 +383,12 @@ class API extends WP_REST_Controller
      */
     public function getFile(WP_REST_Request $request)
     {
+        // Check rate limit.
+        $rateLimitCheck = $this->checkRateLimit('get_file');
+        if (is_wp_error($rateLimitCheck)) {
+            return $rateLimitCheck;
+        }
+
         $recordId = (int) $request['record_id'];
         $downloadUrl = $this->fileController->generateSignedUrl($recordId);
 
@@ -388,6 +469,63 @@ class API extends WP_REST_Controller
                 'invalid_record',
                 __('PDF record not found.', 'tpwc-hebrew-pdf'),
                 ['status' => 404]
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate transaction data.
+     *
+     * @param mixed           $data    Transaction data.
+     * @param WP_REST_Request $request Request object.
+     * @param string          $key     Parameter key.
+     * @return bool|WP_Error True if valid, error otherwise.
+     */
+    public function validateTransactionData($data, $request, $key)
+    {
+        // Ensure data is an array.
+        if (!is_array($data)) {
+            return new WP_Error(
+                'invalid_data_type',
+                __('Transaction data must be an object/array.', 'tpwc-hebrew-pdf'),
+                ['status' => 400]
+            );
+        }
+
+        // Validate required fields.
+        if (empty($data['type'])) {
+            return new WP_Error(
+                'missing_type',
+                __('Transaction type is required in data.type', 'tpwc-hebrew-pdf'),
+                ['status' => 400]
+            );
+        }
+
+        if (!isset($data['amount'])) {
+            return new WP_Error(
+                'missing_amount',
+                __('Transaction amount is required in data.amount', 'tpwc-hebrew-pdf'),
+                ['status' => 400]
+            );
+        }
+
+        // Validate amount is numeric.
+        if (!is_numeric($data['amount'])) {
+            return new WP_Error(
+                'invalid_amount',
+                __('Transaction amount must be numeric.', 'tpwc-hebrew-pdf'),
+                ['status' => 400]
+            );
+        }
+
+        // Validate currency if provided.
+        if (isset($data['currency']) && !is_string($data['currency'])) {
+            return new WP_Error(
+                'invalid_currency',
+                __('Transaction currency must be a string.', 'tpwc-hebrew-pdf'),
+                ['status' => 400]
             );
         }
 

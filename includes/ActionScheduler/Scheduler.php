@@ -130,6 +130,17 @@ class Scheduler
      */
     public function processOrderPdf(int $orderId, bool $force): void
     {
+        // Validate types from Action Scheduler queue.
+        if (!is_int($orderId) || $orderId <= 0) {
+            $this->logger->error("Async: Invalid order ID type or value: " . var_export($orderId, true));
+            return;
+        }
+
+        if (!is_bool($force)) {
+            $this->logger->error("Async: Invalid force parameter type: " . var_export($force, true));
+            return;
+        }
+
         try {
             $plugin = Plugin::instance();
             $recordId = $plugin->generator->generateOrderPdf($orderId, $force);
@@ -154,6 +165,22 @@ class Scheduler
      */
     public function processTransactionPdf(int $transactionId, array $data, bool $force): void
     {
+        // Validate types from Action Scheduler queue.
+        if (!is_int($transactionId) || $transactionId <= 0) {
+            $this->logger->error("Async: Invalid transaction ID type or value: " . var_export($transactionId, true));
+            return;
+        }
+
+        if (!is_array($data)) {
+            $this->logger->error("Async: Invalid data parameter type: " . var_export($data, true));
+            return;
+        }
+
+        if (!is_bool($force)) {
+            $this->logger->error("Async: Invalid force parameter type: " . var_export($force, true));
+            return;
+        }
+
         try {
             $plugin = Plugin::instance();
             $recordId = $plugin->generator->generateTransactionPdf($transactionId, $data, $force);
@@ -176,6 +203,12 @@ class Scheduler
      */
     public function processBulkRegenerate(int $recordId): void
     {
+        // Validate type from Action Scheduler queue.
+        if (!is_int($recordId) || $recordId <= 0) {
+            $this->logger->error("Async: Invalid record ID type or value: " . var_export($recordId, true));
+            return;
+        }
+
         try {
             $plugin = Plugin::instance();
             $newRecordId = $plugin->generator->regeneratePdf($recordId);

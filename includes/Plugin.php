@@ -104,30 +104,56 @@ final class Plugin
 
     /**
      * Private constructor to enforce singleton.
+     *
+     * @throws \Exception If plugin initialization fails.
      */
     private function __construct()
     {
-        $this->logger = new Logger();
-        $this->database = new Database($this->logger);
-        $this->settings = new Settings($this->logger);
-        $this->cache = new CacheManager($this->database, $this->settings, $this->logger);
-        $this->fileController = new FileController($this->database, $this->cache, $this->logger);
-        $this->generator = new Generator($this->cache, $this->settings, $this->fileController, $this->logger);
-        $this->scheduler = new Scheduler($this->logger);
-        $this->emailAttachments = new Attachments($this->logger);
+        try {
+            $this->logger = new Logger();
+            $this->database = new Database($this->logger);
+            $this->settings = new Settings($this->logger);
+            $this->cache = new CacheManager($this->database, $this->settings, $this->logger);
+            $this->fileController = new FileController($this->database, $this->cache, $this->logger);
+            $this->generator = new Generator($this->cache, $this->settings, $this->fileController, $this->logger);
+            $this->scheduler = new Scheduler($this->logger);
+            $this->emailAttachments = new Attachments($this->logger);
 
-        $this->initHooks();
+            $this->initHooks();
+        } catch (\Exception $e) {
+            // Log critical error - plugin cannot initialize.
+            error_log('[TPWC] CRITICAL: Plugin initialization failed: ' . $e->getMessage());
+
+            // Show admin notice about the failure.
+            add_action('admin_notices', function () use ($e) {
+                echo '<div class="error"><p>';
+                printf(
+                    esc_html__('TPWC Hebrew PDF Generator failed to initialize: %s', 'tpwc-hebrew-pdf'),
+                    esc_html($e->getMessage())
+                );
+                echo '</p></div>';
+            });
+
+            // Re-throw to prevent partial initialization.
+            throw $e;
+        }
     }
 
     /**
      * Get plugin instance.
      *
-     * @return Plugin
+     * @return Plugin|null Returns null if initialization fails.
      */
-    public static function instance(): Plugin
+    public static function instance(): ?Plugin
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            try {
+                self::$instance = new self();
+            } catch (\Exception $e) {
+                // Constructor already logged and displayed error.
+                // Return null to indicate failure.
+                return null;
+            }
         }
 
         return self::$instance;
@@ -170,7 +196,10 @@ final class Plugin
             if (false === get_transient('tpwc_scheduling_cleanup')) {
                 set_transient('tpwc_scheduling_cleanup', 1, 60); // 60 second lock
                 if (!wp_next_scheduled('tpwc_cleanup_old_pdfs')) {
-                    wp_schedule_event(time(), 'daily', 'tpwc_cleanup_old_pdfs');
+                    $scheduled = wp_schedule_event(time(), 'daily', 'tpwc_cleanup_old_pdfs');
+                    if ($scheduled === false) {
+                        $this->logger->error('Failed to schedule PDF cleanup cron job');
+                    }
                 }
                 delete_transient('tpwc_scheduling_cleanup');
             }
