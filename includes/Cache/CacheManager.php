@@ -307,9 +307,13 @@ class CacheManager
         global $wpdb;
 
         $tableName = $this->database->getTableName();
-        $wpdb->query("UPDATE {$tableName} SET status = 'stale'");
+        $result = $wpdb->query("UPDATE {$tableName} SET status = 'stale'");
 
-        $this->logger->info('Invalidated all cached PDFs');
+        if ($result === false) {
+            $this->logger->error('Failed to invalidate cache: ' . $wpdb->last_error);
+        } else {
+            $this->logger->info("Invalidated {$result} cached PDFs");
+        }
     }
 
     /**

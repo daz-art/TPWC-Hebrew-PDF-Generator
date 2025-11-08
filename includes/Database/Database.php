@@ -442,6 +442,18 @@ class Database
             FROM {$tableName}
         ");
 
+        if ($result === null) {
+            $this->logger->error('Failed to get cache statistics: ' . $wpdb->last_error);
+            return [
+                'total_files' => 0,
+                'total_bytes' => 0,
+                'cached_files' => 0,
+                'stale_files' => 0,
+                'order_pdfs' => 0,
+                'transaction_pdfs' => 0,
+            ];
+        }
+
         return [
             'total_files' => (int) ($result->total ?? 0),
             'total_bytes' => (int) ($result->total_bytes ?? 0),

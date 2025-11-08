@@ -259,9 +259,14 @@ class FileController
         }
 
         // Stream the file.
-        readfile($record->file_path);
+        $bytes = readfile($record->file_path);
 
-        $this->logger->info("Streamed PDF: {$record->file_path} ({$record->type} #{$record->ref_id})");
+        if ($bytes === false) {
+            $this->logger->error("Failed to stream PDF: {$record->file_path}");
+            wp_die(esc_html__('Failed to download PDF.', 'tpwc-hebrew-pdf'), 500);
+        }
+
+        $this->logger->info("Streamed PDF: {$record->file_path} ({$bytes} bytes)");
     }
 
     /**
