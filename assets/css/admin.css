@@ -1,0 +1,112 @@
+/**
+ * TPWC Hebrew PDF Generator - Admin Styles
+ */
+
+/* Badges */
+.tpwc-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tpwc-badge-order {
+    background-color: #2271b1;
+    color: #fff;
+}
+
+.tpwc-badge-transaction {
+    background-color: #d63638;
+    color: #fff;
+}
+
+/* Status badges */
+.tpwc-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.tpwc-status-cached {
+    background-color: #00a32a;
+    color: #fff;
+}
+
+.tpwc-status-stale {
+    background-color: #dba617;
+    color: #fff;
+}
+
+/* Stats boxes */
+.tpwc-stats {
+    margin: 20px 0;
+}
+
+/* Media upload */
+.tpwc-media-upload img {
+    display: block;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    background: #fff;
+}
+
+/* Actions column */
+.column-actions .button {
+    margin: 0 2px 2px 0;
+}
+
+/* List table improvements */
+.wp-list-table .column-type {
+    width: 100px;
+}
+
+.wp-list-table .column-ref {
+    width: 100px;
+}
+
+.wp-list-table .column-amount {
+    width: 120px;
+}
+
+.wp-list-table .column-created {
+    width: 150px;
+}
+
+.wp-list-table .column-status {
+    width: 80px;
+}
+
+.wp-list-table .column-size {
+    width: 80px;
+}
+
+.wp-list-table .column-actions {
+    width: 280px;
+}
+
+/* Filters */
+.tablenav .actions input[type="date"] {
+    line-height: 2;
+    padding: 0 8px;
+    vertical-align: middle;
+    max-width: 150px;
+}
+
+/* RTL Support */
+body.rtl .tpwc-badge,
+body.rtl .tpwc-status {
+    direction: rtl;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .column-actions .button {
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+}

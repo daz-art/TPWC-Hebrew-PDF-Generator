@@ -1,0 +1,25 @@
+{
+    "name": "tpwc/hebrew-pdf-generator",
+    "description": "WooCommerce Hebrew PDF Generator for Order Summaries and Transaction Records",
+    "type": "wordpress-plugin",
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "php": ">=8.1",
+        "ext-intl": "*",
+        "ext-mbstring": "*",
+        "ext-json": "*",
+        "mpdf/mpdf": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "TPWC\\HebrewPdf\\": "includes/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.1"
+        }
+    }
+}
